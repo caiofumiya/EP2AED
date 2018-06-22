@@ -665,7 +665,7 @@ void insereInicio(Registro info, node *LISTA)
     novo->info = info;
     tmp->prox = novo;
 }
-//exibe(LISTA);
+
 }
 
 node *busca(Registro info, node *LISTA)
