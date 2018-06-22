@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
-#define ORDEM 2
+#define ORDEM 3
+//Arquivo de entrada
 #define namefile "entrada.txt"
 
 
@@ -43,7 +44,6 @@ typedef struct Node node;
 void Antecessor(Apontador Ap, int Ind, Apontador ApPai, int *Diminuiu);
 void Busca(Registro Reg, Apontador Ap);
 void imprime(Apontador raiz);
-int file_exists(const char *filename);
 void Insere(Registro Reg, Apontador *Ap);
 void InsereNaPagina(Apontador Ap, Registro Reg, Apontador ApDir);
 void Ins(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontador *ApRetorno);
@@ -80,58 +80,6 @@ void Antecessor(Apontador Ap, int Ind, Apontador ApPai, int *Diminuiu)
   *Diminuiu = ApPai->n < ORDEM;
 }  /* Antecessor */
 
-void Busca(Registro Reg, Apontador Ap)
-{
-  int i;
-
-  if (Ap == NULL) //
-  {
-    //printf("chave nao encontrada: %d\n", Reg.chave);
-    return;
-  }
-  i = 1;
-  while (i < Ap->n && Reg.chave > Ap->r[i - 1].chave)
-    i++;
-  if (Reg.chave == Ap->r[i - 1].chave)
-  {
-    //printf("chave: %d \n", Reg.chave);
-    return;
-  }
-  if (Reg.chave < Ap->r[i - 1].chave)
-    Busca(Reg, Ap->p[i-1]);
-  else
-    Busca(Reg, Ap->p[i]);
-}
-
-void imprime(Apontador raiz)
-{
-  int i;
-  if (raiz != NULL)
-   {
-     for (i = 0; i < raiz->n; i++)
-      {
-        imprime(raiz->p[i]);
-        printf("%d ", raiz->r[i].chave);
-        printf(" ");
-      }
-     imprime(raiz->p[i]);
-    }
-  printf(" ");
-
-}
-
-int file_exists(const char *filename)
-{
-  FILE *arquivo;
-
-  if((arquivo = fopen(filename, "rb")))
-  {
-    fclose(arquivo);
-    return 1;
-  }
-  return 0;
-}
-
 void InsereNaPagina(Apontador Ap, Registro Reg, Apontador ApDir)
 {
 
@@ -160,6 +108,127 @@ void InsereNaPagina(Apontador Ap, Registro Reg, Apontador ApDir)
   Ap->p[k + 1] = ApDir;
   Ap->n++;
 }
+
+void Busca(Registro Reg, Apontador Ap)
+{
+  int i;
+
+  if (Ap == NULL) //
+  {
+    //printf("chave nao encontrada: %d\n", Reg.chave);
+    return;
+  }
+  i = 1;
+  while (i < Ap->n && Reg.chave > Ap->r[i - 1].chave)
+    i++;
+  if (Reg.chave == Ap->r[i - 1].chave)
+  {
+    //printf("chave: %d \n", Reg.chave);
+    return;
+  }
+  if (Reg.chave < Ap->r[i - 1].chave)
+    Busca(Reg, Ap->p[i-1]);
+  else
+    Busca(Reg, Ap->p[i]);
+}
+
+void imprime(Apontador raiz)
+{
+  //printf("Contagem de chamadas \n");
+  int i;
+  if (raiz != NULL)
+   {
+     for (i = 0; i < raiz->n; i++)
+      {
+        imprime(raiz->p[i]);
+        printf("%d ", raiz->r[i].chave);
+      }
+     imprime(raiz->p[i]);
+    }
+
+}
+
+void fim(Apontador raiz,FILE *fp)
+{
+  int i;
+  if (raiz != NULL)
+   {
+     for (i = 0; i < raiz->n; i++)
+      {
+        fim(raiz->p[i],fp);
+        fprintf(fp,"%i ",raiz->r[i].chave);
+      }
+     fim(raiz->p[i],fp);
+    }
+
+}
+
+void Reconstitui(Apontador ApPag, Apontador ApPai, int PosPai, int *Diminuiu)
+{
+  Apontador Aux;
+  int DispAux, j;
+
+  if (PosPai < ApPai->n) {  /* Aux = Pagina a direita de ApPag */
+    Aux = ApPai->p[PosPai + 1];
+    DispAux = (Aux->n - ORDEM + 1) / 2;
+    ApPag->r[ApPag->n] = ApPai->r[PosPai];
+    ApPag->p[ApPag->n + 1] = Aux->p[0];
+    ApPag->n++;
+    if (DispAux > 0) {  /* Existe folga: transfere de Aux para ApPag */
+      for (j = 1; j < DispAux; j++)
+        InsereNaPagina(ApPag, Aux->r[j - 1], Aux->p[j]);
+      ApPai->r[PosPai] = Aux->r[DispAux - 1];
+      Aux->n -= DispAux;
+      for (j = 0; j < Aux->n; j++)
+        Aux->r[j] = Aux->r[j + DispAux];
+      for (j = 0; j <= Aux->n; j++)
+        Aux->p[j] = Aux->p[j + DispAux];
+      *Diminuiu = 0;
+    }
+    else
+    { /* Fusao: intercala Aux em ApPag e libera Aux */
+      for (j = 1; j <= ORDEM; j++)
+        InsereNaPagina(ApPag, Aux->r[j - 1], Aux->p[j]);
+      free(Aux);
+      for (j = PosPai + 1; j < ApPai->n; j++)
+      {   /* Preenche vazio em ApPai */
+        ApPai->r[j - 1] = ApPai->r[j];
+        ApPai->p[j] = ApPai->p[j + 1];
+      }
+      ApPai->n--;
+      if (ApPai->n >= ORDEM)
+        *Diminuiu = 0;
+    }
+  }
+  else
+  { /* Aux = Pagina a esquerda de ApPag */
+    Aux = ApPai->p[PosPai - 1];
+    DispAux = (Aux->n - ORDEM + 1) / 2;
+    for (j = ApPag->n; j >= 1; j--)
+      ApPag->r[j] = ApPag->r[j - 1];
+    ApPag->r[0] = ApPai->r[PosPai - 1];
+    for (j = ApPag->n; j >= 0; j--)
+      ApPag->p[j + 1] = ApPag->p[j];
+    ApPag->n++;
+    if (DispAux > 0) {  /* Existe folga: transfere de Aux para ApPag */
+      for (j = 1; j < DispAux; j++)
+        InsereNaPagina(ApPag, Aux->r[Aux->n - j], Aux->p[Aux->n - j + 1]);
+      ApPag->p[0] = Aux->p[Aux->n - DispAux + 1];
+      ApPai->r[PosPai - 1] = Aux->r[Aux->n - DispAux];
+      Aux->n -= DispAux;
+      *Diminuiu = 0;
+    }
+    else
+    {  /* Fusao: intercala ApPag em Aux e libera ApPag */
+      for (j = 1; j <= ORDEM; j++)
+        InsereNaPagina(Aux, ApPag->r[j - 1], ApPag->p[j]);
+      free(ApPag);
+      ApPai->n--;
+      if (ApPai->n >= ORDEM)
+        *Diminuiu = 0;
+    }
+  }
+}  /* Reconstitui */
 
 void Ins(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontador *ApRetorno)
 {
@@ -272,73 +341,6 @@ void Pesquisa(Registro *x, Apontador Ap)
     Pesquisa(x, Ap->p[i]);
 } /* Pesquisa */
 
-void Reconstitui(Apontador ApPag, Apontador ApPai, int PosPai, int *Diminuiu)
-{
-  Apontador Aux;
-  int DispAux, j;
-
-  if (PosPai < ApPai->n) {  /* Aux = Pagina a direita de ApPag */
-    Aux = ApPai->p[PosPai + 1];
-    DispAux = (Aux->n - ORDEM + 1) / 2;
-    ApPag->r[ApPag->n] = ApPai->r[PosPai];
-    ApPag->p[ApPag->n + 1] = Aux->p[0];
-    ApPag->n++;
-    if (DispAux > 0) {  /* Existe folga: transfere de Aux para ApPag */
-      for (j = 1; j < DispAux; j++)
-        InsereNaPagina(ApPag, Aux->r[j - 1], Aux->p[j]);
-      ApPai->r[PosPai] = Aux->r[DispAux - 1];
-      Aux->n -= DispAux;
-      for (j = 0; j < Aux->n; j++)
-        Aux->r[j] = Aux->r[j + DispAux];
-      for (j = 0; j <= Aux->n; j++)
-        Aux->p[j] = Aux->p[j + DispAux];
-      *Diminuiu = 0;
-    }
-    else
-    { /* Fusao: intercala Aux em ApPag e libera Aux */
-      for (j = 1; j <= ORDEM; j++)
-        InsereNaPagina(ApPag, Aux->r[j - 1], Aux->p[j]);
-      free(Aux);
-      for (j = PosPai + 1; j < ApPai->n; j++)
-      {   /* Preenche vazio em ApPai */
-        ApPai->r[j - 1] = ApPai->r[j];
-        ApPai->p[j] = ApPai->p[j + 1];
-      }
-      ApPai->n--;
-      if (ApPai->n >= ORDEM)
-        *Diminuiu = 0;
-    }
-  }
-  else
-  { /* Aux = Pagina a esquerda de ApPag */
-    Aux = ApPai->p[PosPai - 1];
-    DispAux = (Aux->n - ORDEM + 1) / 2;
-    for (j = ApPag->n; j >= 1; j--)
-      ApPag->r[j] = ApPag->r[j - 1];
-    ApPag->r[0] = ApPai->r[PosPai - 1];
-    for (j = ApPag->n; j >= 0; j--)
-      ApPag->p[j + 1] = ApPag->p[j];
-    ApPag->n++;
-    if (DispAux > 0) {  /* Existe folga: transfere de Aux para ApPag */
-      for (j = 1; j < DispAux; j++)
-        InsereNaPagina(ApPag, Aux->r[Aux->n - j], Aux->p[Aux->n - j + 1]);
-      ApPag->p[0] = Aux->p[Aux->n - DispAux + 1];
-      ApPai->r[PosPai - 1] = Aux->r[Aux->n - DispAux];
-      Aux->n -= DispAux;
-      *Diminuiu = 0;
-    }
-    else
-    {  /* Fusao: intercala ApPag em Aux e libera ApPag */
-      for (j = 1; j <= ORDEM; j++)
-        InsereNaPagina(Aux, ApPag->r[j - 1], ApPag->p[j]);
-      free(ApPag);
-      ApPai->n--;
-      if (ApPai->n >= ORDEM)
-        *Diminuiu = 0;
-    }
-  }
-}  /* Reconstitui */
-
 void Ret(int Ch, Apontador *Ap, int *Diminuiu)
 {
   int Ind, j;
@@ -420,19 +422,24 @@ int main()
   Inicializa(arv);
   inicia(LISTA);
   FILE *arq;
+  FILE *saida;
   char comando[]="";
 
+  saida = fopen("saida.txt","w");
   arq = fopen(namefile, "r");
   if(arq == NULL)
 			printf("Erro, nao foi possivel abrir o arquivo\n");
-  
-  while( (fscanf(arq,"%s %i",&comando,&chave))!=EOF ){
-    
-    if(comando=="imprime"){
+
+  while( (fscanf(arq,"%s",comando))!=EOF ){
+
+    if(strcmp(comando,"imprime")==0){
             imprime(*arv);
+            printf("\n");
     }
     else{
-          if(comando=="insere"){
+
+          if(strcmp(comando,"insere")==0){
+            fscanf(arq,"%d",&chave);
             reg.chave = chave;
             count++;
             reg.rank = count;
@@ -443,22 +450,28 @@ int main()
             Insere(reg,arv);
           }
           else{ 
-              if(comando=="remove"){
+
+              if(strcmp(comando,"remove")==0){
+
+                fscanf(arq,"%d",&chave);
                 reg.chave = chave;
                 Retira(reg.chave, arv);
                 saveAux(*arv,2*ORDEM);
                 }
               else{
-                if(comando=="fim"){
-                  
+                
+                if(strcmp(comando,"fim")==0){
+                  fim(*arv,saida);
                 }
               } 
             }  
     }
   }
+}
+  // Apenas para teste de mesa 
 
 
-  while(1)
+  /*while(1)
   {
     scanf("%c", &tecla);
     if (tecla=='e')
@@ -496,5 +509,5 @@ int main()
   }
   return 0;
   }
-
+*/
 //##############################################

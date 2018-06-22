@@ -128,6 +128,7 @@ void buscainFile(Registro Reg, Apontador pagina)
 
 void em_ordem(Apontador raiz)
 {
+  printf("Contagem de chamadas \n");
   int i;
   if (raiz != NULL)
    {
