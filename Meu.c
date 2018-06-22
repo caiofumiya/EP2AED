@@ -1,19 +1,16 @@
-/*
-## Universidade Federal da Bahia
-## Docente: Danilo Azevedo
-## Bacharelado em Ciencia da Computacao - Estrutura de Dados II
 
-chaves testadas: 20,40,10,30,15,35,7,26,18,22,
-5,42,13,46,27,8,32,38,24,45,25
+////////////////////////////////////////////////////////////////
+/////////       Caio Massaharu Damaceno Fumiya     /////////////
+/////////       N°USP : 10414702                   /////////////
+////////////////////////////////////////////////////////////////
 
- */
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 #define ORDEM 2
-#define namefile "_arquivo.dat"
 
 
 int cont = -1, count = 0;
@@ -21,8 +18,6 @@ int cont = -1, count = 0;
 typedef struct
 {
   int chave;
-  char nome[20];
-  int idade;
   int ApPage[2];
   int rank;
 } Registro;
@@ -45,24 +40,22 @@ typedef struct Node node;
 
 //##########################################################
 void Antecessor(Apontador Ap, int Ind, Apontador ApPai, int *Diminuiu);
-void Busca(Registro Reg, Apontador Ap);void em_ordem(Apontador raiz);
-void buscainFile(Registro Reg, Apontador pagina);int isleaf(Apontador a);
-int file_exists(const char *filename);void Insere(Registro Reg, Apontador *Ap);
+void Busca(Registro Reg, Apontador Ap);
+void imprime(Apontador raiz);
+int file_exists(const char *filename);
+void Insere(Registro Reg, Apontador *Ap);
 void InsereNaPagina(Apontador Ap, Registro Reg, Apontador ApDir);
 void Ins(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontador *ApRetorno);
-int Imprime2(Apontador p, int Nivel, int aux, int n);int Imprime(Apontador p, int N, int aux, int n);
-void InsertPosFile(Registro Reg, Apontador *Ap);node *busca(Registro info, node *LISTA);
-void InsPosFile(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontador *ApRetorno);
-void pos_ordem(Apontador raiz);void Retira(int Ch, Apontador *Ap);void Ret(int Ch, Apontador *Ap, int *Diminuiu);
+node *busca(Registro info, node *LISTA);
+void Retira(int Ch, Apontador *Ap);
+void Ret(int Ch, Apontador *Ap, int *Diminuiu);
 void Reconstitui(Apontador ApPag, Apontador ApPai, int PosPai, int *Diminuiu);
-void saveAux(Apontador p, int Nivel);void salvar(Apontador pagina, Registro Reg[]);
-void recuperarReg(Apontador *arv, node *LISTA);void insereInicio(Registro info, node *LISTA);
-void execut(Registro info, node *LISTA);void exibe(node *LISTA);
+void saveAux(Apontador p, int Nivel);
 
-typedef Apontador TipoDicionario;
-void Inicializa(TipoDicionario *Dicionario)
+typedef Apontador TipoDic;
+void Inicializa(TipoDic *Dic)
 {
-  *Dicionario = NULL;
+  *Dic = NULL;
 }  /* Inicializa a estrutura */
 
 void inicia(node *LISTA)
@@ -110,35 +103,21 @@ void Busca(Registro Reg, Apontador Ap)
     Busca(Reg, Ap->p[i]);
 }
 
-void buscainFile(Registro Reg, Apontador pagina)
-{
-    Registro reg[2*ORDEM];
-    int i;
-    FILE *arq = fopen(namefile,"rb");
-    if (arq == NULL)
-    exit(1);
-    fseek(arq, pagina->pageNum*(2*ORDEM*sizeof(Registro)), SEEK_SET);
-    fread(reg, (2*ORDEM*sizeof(Registro)),1,arq);
-    fclose(arq);
-    for(i = 0; i < 2*ORDEM; i++){
-        if (Reg.chave == reg[i].chave)
-        printf("%s%d\n",reg[i].nome,reg[i].idade);
-            }
-    }
-
-void em_ordem(Apontador raiz)
+void imprime(Apontador raiz)
 {
   int i;
   if (raiz != NULL)
    {
      for (i = 0; i < raiz->n; i++)
       {
-        em_ordem(raiz->p[i]);
+        imprime(raiz->p[i]);
         printf("%d ", raiz->r[i].chave);
-        printf("\n");
+        printf(" ");
       }
-     em_ordem(raiz->p[i]);
-      }
+     imprime(raiz->p[i]);
+    }
+  printf(" ");
+
 }
 
 int file_exists(const char *filename)
@@ -151,14 +130,6 @@ int file_exists(const char *filename)
     return 1;
   }
   return 0;
-}
-
-int isleaf(Apontador a)
-{
-    if (a->p[0] == NULL)
-    return 1;
-    else
-    return 0;
 }
 
 void InsereNaPagina(Apontador Ap, Registro Reg, Apontador ApDir)
@@ -276,153 +247,6 @@ void Insere(Registro Reg, Apontador *Ap)
   }
   saveAux(*Ap, 2*ORDEM);
 }  /*Insercao*/
-
-int Imprime2(Apontador p, int Nivel, int aux, int n)
-{
-  int i;
-
-  if (p == NULL)
-    return 0;
-  if(Nivel == aux){
-      n++;
-    printf("No: %d : ",p->pageNum);
-  for (i = 0; i < p->n; i++){
-      if (p->p[i] !=NULL)
-    printf("Apontador: %d ", p->p[i]->pageNum);
-    else
-    printf("Apontador: null ");
-    printf("chave: %d ", p->r[i].chave);
-   }
-   printf("\n");
-   return n;
- }else{
-    aux++;
-     for (i = 0; i <= p->n; i++)
-     Imprime2(p->p[i], Nivel, aux, n);
-     }
-    return 0;
-}
-
-int Imprime(Apontador p, int N, int aux, int n)
-{
-  int i;
-
-  if (p == NULL)
-    return 0;
-  if(p->pageNum != aux){
-    p->num = N;
-    aux = p->pageNum;
-    return aux;
- }else{
-    aux++;
-     for (i = 0; i <= p->n; i++)
-     Imprime(p->p[i], N, aux, n);
-     }
-     return 0;
-}
-
-void InsertPosFile(Registro Reg, Apontador *Ap)
-{
-  int Cresceu;
-  Registro RegRetorno;
-  Apontador ApRetorno;
-  Apontador ApTemp;
-
-  InsPosFile(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno);
-  if (Cresceu) { /* Se arvore cresce na altura pela raiz */
-    ApTemp = (Apontador) malloc(sizeof(Pagina));
-    ApTemp->n = 1;
-    ApTemp->r[0] = RegRetorno;
-    ApTemp->p[1] = ApRetorno;
-    cont++;
-    ApTemp->pageNum = cont;
-    ApTemp->p[0] = *Ap;
-    *Ap = ApTemp;
-  }
-}
-
-void InsPosFile(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontador *ApRetorno)
-{
-  Apontador ApTemp;
-  Registro Aux;
-  int i, j;
-
-  if (Ap == NULL) //
-  {
-    *Cresceu = 1;
-    *RegRetorno = Reg;
-    *ApRetorno = NULL;
-    return;
-  }
-  i = 1;
-  while (i < Ap->n && Reg.chave > Ap->r[i - 1].chave)
-    i++;
-  if (Reg.chave == Ap->r[i - 1].chave)
-  {
-    //printf("chave ja existente: %d \n", Reg.chave);
-    *Cresceu = 0;
-    return;
-  }
-  if (Reg.chave < Ap->r[i - 1].chave)
-    InsPosFile(Reg, Ap->p[i-1], Cresceu, RegRetorno, ApRetorno);
-  else
-    InsPosFile(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno);
-  if (!*Cresceu)
-    return;
-  if (Ap->n < 2*ORDEM)
-  {  /* Verificando se a pagina tem espaco */
-    InsereNaPagina(Ap, *RegRetorno, *ApRetorno);
-    *Cresceu = 0;
-    return;
-  }
-  /* Split: Pagina tem que ser dividida */
-  ApTemp = (Apontador) malloc(sizeof(Pagina));
-  ApTemp->n = 0;
-  ApTemp->p[0] = NULL;
-  cont++;
-  ApTemp->pageNum = cont;
-
-  if (i <= ORDEM + 1)
-  {
-    InsereNaPagina(ApTemp, Ap->r[2*ORDEM - 1], Ap->p[2*ORDEM]);
-    Ap->n--;
-    InsereNaPagina(Ap, *RegRetorno, *ApRetorno);
-  }
-  else{
-    InsereNaPagina(ApTemp, *RegRetorno, *ApRetorno);
-    }
-  for (j = ORDEM + 2; j <= 2*ORDEM; j++)
-    InsereNaPagina(ApTemp, Ap->r[j - 1], Ap->p[j]);
-
-
-  Ap->n = ORDEM;
-  ApTemp->p[0] = Ap->p[ORDEM + 1];
-  *RegRetorno = Ap->r[ORDEM];
-  *ApRetorno = ApTemp;
- for (j = ORDEM; j < Ap->n+2; j++){
-    Aux.chave = 0;
-    Aux.rank = 0;
-    Ap->r[j] = Aux;
-    }
-}
-
-void pos_ordem(Apontador raiz)
-{
-  int i;
- if (isleaf(raiz)){
-    for (i = raiz->n-1; i >=0; i--){
-        printf("%d\n", raiz->r[i].chave);
-
-     }
-  }
-  else{
-    pos_ordem(raiz->p[raiz->n]);
-    for (i = raiz->n-1; i >=0; i--){
-        printf("%d\n", raiz->r[i].chave);
-    pos_ordem(raiz->p[i]);
-        }
-    }
-}
 
 void Pesquisa(Registro *x, Apontador Ap)
 {
@@ -573,132 +397,17 @@ void Retira(int Ch, Apontador *Ap)
 
 }  /* Retira */
 
-void recuperarReg(Apontador *arv, node *LISTA)
-{
-
-    FILE* arq;
-    Registro Reg[2*ORDEM];
-    node *tmp;
-    int i=0,j=0, tam;
-        arq = fopen(namefile,"rb");
-        if (arq == NULL)
-            exit(1);
-       fseek(arq, 0, SEEK_END);
-       tam = ftell(arq);
-       rewind(arq);
-       fclose(arq);
-
-       arq = fopen(namefile,"rb");
-        if (arq == NULL)
-            exit(1);
-        while (j*(2*ORDEM*sizeof(Registro)) < tam){
-            fseek(arq, j*(2*ORDEM*sizeof(Registro)), SEEK_SET);
-            fread(Reg, 2*ORDEM*sizeof(Registro),1,arq);
-
-        for(i = 0; i < 2*ORDEM; i++){
-           if (Reg[i].chave > 0)
-           execut(Reg[i], LISTA);
-        }
-    j++;
-    }
-    fclose(arq);
-    tmp = LISTA->prox;
-    while( tmp != NULL){
-        InsertPosFile(tmp->info, arv);
-        tmp = tmp->prox;
-    }
-    free(tmp);
-    free(LISTA);
-    //Imprime(*arv, 2*ORDEM, 0);
-    }
-
 void saveAux(Apontador p, int Nivel)
 {
   int i,j;
 
   if (p == NULL)
     return;
-  for (i = 0; i < p->n; i++)
-    salvar(p, p->r);
   for (j = 0; j <= p->n; j++)
     saveAux(p->p[j], Nivel + 1);
 }
 
-void salvar(Apontador pagina, Registro Reg[])
-{
-
-    FILE* arq;
-    if (!file_exists(namefile)){
-        arq = fopen(namefile,"wb");
-        if (arq == NULL)
-            exit(1);
-        fseek(arq, pagina->pageNum*(2*ORDEM*sizeof(Registro)), SEEK_SET);
-        fwrite(Reg,(2*ORDEM*sizeof(Registro)),1,arq);
-        fclose(arq);
-    }
-
-    else{
-        arq = fopen(namefile,"r+b");
-        if (arq == NULL)
-            exit(1);
-        fseek(arq, pagina->pageNum*(2*ORDEM*sizeof(Registro)), SEEK_SET);
-        fwrite(Reg, (2*ORDEM*sizeof(Registro)),1,arq);
-        fclose(arq);
-        }
-    }
-
-//############################### //Estrutura 1 Btree
-
-//############################### //Estrutura 2 lista encadeada
-void insereInicio(Registro info, node *LISTA)
-{
-    node *novo=(node *) malloc(sizeof(node));
-    node *tmp = busca(info, LISTA);
-    if(LISTA->prox == NULL){
-        novo->info = info;
-        novo->prox = LISTA->prox;
-        LISTA->prox = novo;
-    }else{
-    novo->prox = tmp->prox;
-    novo->info = info;
-    tmp->prox = novo;
-}
-//exibe(LISTA);
-}
-
-node *busca(Registro info, node *LISTA)
-{
-        node *atual,*antNode;
-        atual = LISTA->prox;
-        antNode = LISTA;
-        while(atual != NULL && info.rank > atual->info.rank){
-            antNode = atual;
-            atual = atual->prox;
-        }
-        return antNode;
-    }
-
-void exibe(node *LISTA)
-{
-    if(!LISTA){
-        return ;
-    }
-    node *tmp;
-    tmp = LISTA->prox;
-
-    while( tmp != NULL){
-        printf(" %d ", tmp->info.chave);
-        tmp = tmp->prox;
-    }
-    printf("\n");
-}
-
-void execut(Registro info, node *LISTA)
-{
-    insereInicio(info, LISTA);
-    }
-
-//############################# //Estrutura 2 lista encadeada
+/////////////////      Btree      /////////////////////
 
 int main()
 {
@@ -710,9 +419,6 @@ int main()
   node *LISTA = (node *) malloc(sizeof(node));
   Inicializa(arv);
   inicia(LISTA);
-    if (file_exists(namefile)){
-        recuperarReg(arv, LISTA);
-        }
 
   while(1)
   {
@@ -721,46 +427,34 @@ int main()
       break;
     switch(tecla)
     {
+
+      ////////////////////     Insere
       case 'i':
-      //printf("insercao \n");
            scanf("%d", &chave);
            reg.chave = chave;
            count++;
            reg.rank = count;
-           fflush(stdin);
            getchar();
-           fgets(reg.nome, sizeof(reg.nome), stdin);
-           scanf("%d", reg.idade);
            if (reg.chave <= 0){
                count--;
             break;
             }
             Insere(reg,arv);
       break;
+
+      //////////////////////      Remove
       case 'r':
            scanf("%d", &chave);
            reg.chave = chave;
            Retira(reg.chave, arv);
-           remove(namefile);
             saveAux(*arv,2*ORDEM);
       break;
-      case 'o':
-            em_ordem(*arv);
-      break;
-      case 'p':
-      for(i=0; i < 2*ORDEM; i++){
-            num = Imprime2(*arv, i, 0, num);
-      }
-      break;
-      case 'c':
-      getchar();
-      scanf("%d", &chave);
-      reg.chave = chave;
-      Busca(reg,*arv);
-      break;
-    }
 
-    fflush(stdin);
+      //////////////////////      Imprime
+      case 'o':
+            imprime(*arv);
+      break;
+
   }
   return 0;
   }
