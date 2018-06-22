@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <string.h>
 #define ORDEM 2
+#define namefile "entrada.txt"
 
 
 int cont = -1, count = 0;
@@ -63,7 +64,7 @@ void inicia(node *LISTA)
     LISTA->prox = NULL;
 }
 
-//############################### Estrutura 1 Btree
+/////////////////    Btree    /////////////////////////////////
 
 void Antecessor(Apontador Ap, int Ind, Apontador ApPai, int *Diminuiu)
 {
@@ -85,7 +86,7 @@ void Busca(Registro Reg, Apontador Ap)
 
   if (Ap == NULL) //
   {
-    printf("chave nao encontrada: %d\n", Reg.chave);
+    //printf("chave nao encontrada: %d\n", Reg.chave);
     return;
   }
   i = 1;
@@ -93,8 +94,7 @@ void Busca(Registro Reg, Apontador Ap)
     i++;
   if (Reg.chave == Ap->r[i - 1].chave)
   {
-    printf("chave: %d \n", Reg.chave);
-    buscainFile(Ap->r[i-1],Ap);
+    //printf("chave: %d \n", Reg.chave);
     return;
   }
   if (Reg.chave < Ap->r[i - 1].chave)
@@ -179,7 +179,7 @@ void Ins(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontad
     i++;
   if (Reg.chave == Ap->r[i - 1].chave)
   {
-    printf("chave ja existente: %d \n", Reg.chave);
+    //printf("chave ja existente: %d \n", Reg.chave);
     *Cresceu = 0;
     return;
   }
@@ -190,12 +190,12 @@ void Ins(Registro Reg, Apontador Ap, int *Cresceu, Registro *RegRetorno, Apontad
   if (!*Cresceu)
     return;
   if (Ap->n < 2*ORDEM)
-  {  /* Verificando se a pagina tem espaco */
+  {  /* Verifica se tem espaço */
     InsereNaPagina(Ap, *RegRetorno, *ApRetorno);
     *Cresceu = 0;
     return;
   }
-  /* Split: Pagina tem que ser dividida */
+  /* Divide pagina */
   ApTemp = (Apontador) malloc(sizeof(Pagina));
   ApTemp->n = 0;
   ApTemp->p[0] = NULL;
@@ -347,7 +347,7 @@ void Ret(int Ch, Apontador *Ap, int *Diminuiu)
 
   if (*Ap == NULL)
   {
-    printf("chave nao encontrada: %i\n", Ch);
+    //printf("chave nao encontrada: %i\n", Ch);
     *Diminuiu = 0;
     return;
   }
@@ -413,12 +413,50 @@ int main()
 {
   Apontador *arv;
   Registro reg;
-  char tecla;
+  //char tecla;
   int chave, i, num = 0;
   arv=(Apontador*) malloc(sizeof(Apontador));
   node *LISTA = (node *) malloc(sizeof(node));
   Inicializa(arv);
   inicia(LISTA);
+  FILE *arq;
+  char comando[]="";
+
+  arq = fopen(namefile, "r");
+  if(arq == NULL)
+			printf("Erro, nao foi possivel abrir o arquivo\n");
+  
+  while( (fscanf(arq,"%s %i",&comando,&chave))!=EOF ){
+    
+    if(comando=="imprime"){
+            imprime(*arv);
+    }
+    else{
+          if(comando=="insere"){
+            reg.chave = chave;
+            count++;
+            reg.rank = count;
+            if (reg.chave <= 0){
+              count--;
+              break;
+            }
+            Insere(reg,arv);
+          }
+          else{ 
+              if(comando=="remove"){
+                reg.chave = chave;
+                Retira(reg.chave, arv);
+                saveAux(*arv,2*ORDEM);
+                }
+              else{
+                if(comando=="fim"){
+                  
+                }
+              } 
+            }  
+    }
+  }
+
 
   while(1)
   {
